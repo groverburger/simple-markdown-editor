@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Markdown Editor & Viewer</title>
+  <meta charset="UTF-8">
+  <style>
+    /* Base Reset & Body Setup */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #24292e;
+      background-color: #fff;
+      margin: 0;
+      padding: 0;
+      font-size: 9pt;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Styles for the rendered view (screen) */
+    .container {
+      max-width: 800px;
+      margin: 4rem auto; /* Margin around the document for screen */
+      padding: 0 2rem; /* Inner padding for screen */
+      flex-grow: 1;
+      overflow-y: auto; /* Enable scrolling for content */
+    }
+
+    /* --- Typography --- */
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      line-height: 1.25;
+      /* Ensure text does not break within a heading */
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Styles for the header-content wrapper (screen) */
+    .header-group {
+        margin-bottom: 1rem; /* Space between groups, similar to p margin */
+    }
+    .header-group h1, .header-group h2, .header-group h3,
+    .header-group h4, .header-group h5, .header-group h6 {
+        margin-bottom: 0.5rem; /* Reduce margin on header when inside group */
+    }
+    .header-group > *:last-child {
+        margin-bottom: 0; /* Remove bottom margin of last element in group */
+    }
+
+
+    h1 {
+      font-size: 2em;
+      border-bottom: 1px solid #eaecef;
+      padding-bottom: 0.3em;
+    }
+
+    h2 {
+      font-size: 1.5em;
+      border-bottom: 1px solid #eaecef;
+      padding-bottom: 0.3em;
+    }
+
+    h3 { font-size: 1.25em; }
+    h4 { font-size: 1em; }
+
+    p, ul, ol {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      page-break-inside: avoid; /* Keep paragraphs/list items together */
+      break-inside: avoid;
+    }
+
+    a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* --- Code blocks --- */
+    code {
+      font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+      background-color: rgba(27, 31, 35, 0.05);
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 85%;
+    }
+
+    pre {
+      background-color: #f6f8fa;
+      border-radius: 3px;
+      padding: 16px;
+      overflow: auto;
+      line-height: 1.45;
+      page-break-inside: avoid; /* Keep code blocks together */
+      break-inside: avoid;
+    }
+
+    pre code {
+      background-color: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    /* --- Tables --- */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 1rem;
+      page-break-inside: avoid; /* Keep tables together */
+      break-inside: avoid;
+    }
+
+    table th, table td {
+      padding: 6px 13px;
+      border: 1px solid #dfe2e5;
+    }
+
+    table tr {
+      background-color: #fff;
+      border-top: 1px solid #c6cbd1;
+    }
+
+    table tr:nth-child(2n) {
+      background-color: #f6f8fa;
+    }
+
+    /* --- Blockquotes --- */
+    blockquote {
+      margin: 0;
+      padding: 0 1em;
+      color: #6a737d;
+      border-left: 0.25em solid #dfe2e5;
+      page-break-inside: avoid; /* Keep blockquotes together */
+      break-inside: avoid;
+    }
+
+    /* --- Lists --- */
+    ul, ol {
+      padding-left: 2em;
+      page-break-inside: avoid; /* Keep lists together */
+      break-inside: avoid;
+    }
+    ul li, ol li {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* --- Images --- */
+    img {
+      max-width: 100%;
+      height: auto;
+      page-break-inside: avoid; /* Keep images together */
+      break-inside: avoid;
+    }
+
+    /* Markdown Editor Styles */
+    #markdown-editor {
+      width: 100%;
+      height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+      border: none;
+      font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+    }
+
+    #mode-banner {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      font-size: 0.8em;
+      z-index: 1000;
+      pointer-events: none; /* Allow clicks to pass through */
+    }
+
+    /* Utility classes for toggling views */
+    .hidden {
+      display: none !important;
+    }
+
+    /* --- Print-specific styles --- */
+    @media print {
+        /* Hide editor when printing */
+        #markdown-editor, #mode-banner {
+            display: none !important;
+        }
+
+        /* Ensure the container is visible and styled for print */
+        .container {
+            display: block !important; /* Override .hidden if applied */
+            width: 100% !important;
+            max-width: none !important; /* Allow content to use full width */
+            margin: 0 !important; /* Remove screen margins */
+            padding: 0 !important;
+            overflow: visible !important; /* Allow content to flow naturally for printing */
+        }
+        body {
+            height: auto !important;
+            overflow: visible !important;
+            /* Set print margins directly on the body for a consistent page margin */
+            margin: 1in !important; /* Example: 1 inch margin on all sides */
+            padding: 0 !important;
+        }
+
+        /* The key for stubborn headers: prevent breaks inside the group */
+        .header-group {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            orphans: 3; /* Ensure at least 3 lines of following paragraph on same page */
+            widows: 3;  /* Ensure at least 3 lines of following paragraph on same page */
+        }
+
+        /* No page break after header elements themselves within the group */
+        .header-group h1, .header-group h2, .header-group h3,
+        .header-group h4, .header-group h5, .header-group h6 {
+            page-break-after: avoid !important;
+        }
+
+        /* Avoid page breaks before these elements if they are not the first in a .header-group */
+        p, ul, ol, li, pre, blockquote, table, img, figure {
+          page-break-inside: avoid !important; /* Keep elements from breaking mid-content */
+          break-inside: avoid !important;
+          page-break-before: avoid !important; /* Prevent new page right before these if avoidable */
+        }
+
+        a {
+            text-decoration: underline; /* Ensure links are underlined in print */
+            color: #000; /* Ensure links are black in print */
+        }
+    }
+  </style>
+
+  <!-- Add MathJax for LaTeX rendering -->
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: {
+        fontCache: 'global'
+      },
+      options: {
+        renderActions: {
+          addMenu: []
+        }
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <!-- Add Marked.js for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <textarea id="markdown-editor" class="hidden"></textarea>
+  <div class="container" id="content"></div>
+  <div id="mode-banner"></div>
+
+  <script>
+    let isEditing = true; // Start in editing mode
+    const localStorageKey = 'markdownEditorContent'; // Key for local storage
+    const defaultTitle = "Markdown Editor"; // Default title if no first line is found
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const markdownEditor = document.getElementById('markdown-editor');
+      const contentDisplay = document.getElementById('content');
+      const modeBanner = document.getElementById('mode-banner')
+
+      // Minimal Markdown example content
+      const initialMarkdown = `
+# Welcome to the Markdown Editor!
+
+Press **Ctrl+M** to toggle between editing and viewing modes.
+
+## Headings
+### Subheading
+#### Another Level
+
+## Text Formatting
+You can make text **bold**, *italic*, or even ***bold and italic***.
+Here's some \`inline code\`.
+
+## Lists
+### Unordered List:
+* Item one
+* Item two
+  * Nested item
+* Item three
+
+### Ordered List:
+1. First item
+2. Second item
+   1. Nested ordered item
+3. Third item
+
+## Links and Images
+Visit [Google](https://www.google.com).
+
+Here's an image:
+![Alt text for image](https://groverburger.xyz/assets/favicon.png)
+
+## Code Blocks
+\`\`\`javascript
+function greet(name) {
+  console.log("Hello, " + name + "!");
+}
+greet("World");
+\`\`\`
+
+## Blockquotes
+> This is a blockquote.
+> It can span multiple lines.
+
+## Tables
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Row 1 Col 1 | Row 1 Col 2 | Row 1 Col 3 |
+| Row 2 Col 1 | Row 2 Col 2 | Row 2 Col 3 |
+
+## Math (via MathJax)
+Inline math: $\\alpha + \\beta = \\gamma$
+
+Display math:
+$$
+\\sum_{i=1}^n i = \\frac{n(n+1)}{2}
+$$
+`;
+
+      // --- Local Storage Logic ---
+      function saveContent() {
+        localStorage.setItem(localStorageKey, markdownEditor.value);
+        updateDocumentTitle(); // Update title on save
+      }
+
+      function loadContent() {
+        const savedContent = localStorage.getItem(localStorageKey);
+        if (savedContent) {
+          markdownEditor.value = savedContent;
+        } else {
+          markdownEditor.value = initialMarkdown; // Use initial markdown if nothing saved
+        }
+        updateDocumentTitle(); // Update title after loading content
+      }
+
+      // Load content when the page initializes
+      loadContent();
+
+      // Save content whenever the editor's input changes
+      markdownEditor.addEventListener('input', saveContent);
+      // --- End Local Storage Logic ---
+
+      // --- Title Update Logic ---
+      function updateDocumentTitle() {
+        const firstLine = markdownEditor.value.split('\n')[0];
+        let title = firstLine ? firstLine.replace(/^[#\s]+/, '').trim() : '';
+
+        if (title) {
+          document.title = title;
+        } else {
+          document.title = defaultTitle; // Fallback to default if first line is empty or just '#'
+        }
+      }
+      // --- End Title Update Logic ---
+
+
+      // Custom renderer for marked.js
+      const renderer = {
+        heading(text, level) {
+          // Wrap headings in a div with a custom class
+          return `<div class="header-group"><h${level}>${text}</h${level}>`;
+        },
+        paragraph(text) {
+          // Check if this paragraph immediately follows a heading within a header-group
+          // This logic is tricky with Marked.js as it processes blocks independently.
+          // We will rely on post-processing or assume it's the first text after a header
+          // within the header-group for CSS purposes.
+          return `<p>${text}</p></div>`; // Close the header-group here if it's the first content after a header.
+        },
+        // For other elements, simply return the default rendering
+        code(code, lang) {
+            return `<pre><code>${code}</code></pre></div>`; // Example: If a code block is the first element
+        },
+        list(body, ordered, start) {
+            const tag = ordered ? 'ol' : 'ul';
+            const startAttr = ordered && start !== 1 ? ` start="${start}"` : '';
+            return `<${tag}${startAttr}>${body}</${tag}></div>`; // Example: If a list is the first element
+        }
+        // ... you'd need to customize other renderers like list, table, blockquote, etc.
+        // to properly close the header-group if they are meant to be grouped.
+        // This approach can get complex quickly.
+      };
+
+      // A simpler, more robust approach to group content *after* rendering.
+      // We will perform DOM manipulation after marked.js is done.
+      function postProcessHeaders(htmlContent) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlContent, 'text/html');
+          const bodyChildren = Array.from(doc.body.children);
+          let currentGroup = null;
+          const groupedHtmlElements = [];
+
+          for (let i = 0; i < bodyChildren.length; i++) {
+              const element = bodyChildren[i];
+
+              if (element.tagName.startsWith('H') && element.tagName.length === 2) { // Is a header (H1-H6)
+                  if (currentGroup) { // Close previous group if exists
+                      groupedHtmlElements.push(currentGroup);
+                  }
+                  currentGroup = document.createElement('div');
+                  currentGroup.classList.add('header-group');
+                  currentGroup.appendChild(element.cloneNode(true));
+              } else if (currentGroup) {
+                  // Add subsequent elements to the current group until another header or no more elements
+                  currentGroup.appendChild(element.cloneNode(true));
+              } else {
+                  // If no current group and not a header, just add the element as is
+                  groupedHtmlElements.push(element.cloneNode(true));
+              }
+          }
+          if (currentGroup) { // Add the last group if it exists
+              groupedHtmlElements.push(currentGroup);
+          }
+
+          const tempDiv = document.createElement('div');
+          groupedHtmlElements.forEach(el => tempDiv.appendChild(el));
+          return tempDiv.innerHTML;
+      }
+
+
+      marked.setOptions({
+        highlight: function(code, lang) {
+          return code;
+        },
+        // No custom renderer here, we'll use post-processing
+      });
+
+      function renderMarkdown() {
+        const currentMarkdown = markdownEditor.value;
+        const rawHtml = marked.parse(currentMarkdown);
+        const processedHtml = postProcessHeaders(rawHtml); // Apply the post-processing
+        contentDisplay.innerHTML = processedHtml;
+        // Render LaTeX with MathJax
+        //MathJax.typesetPromise([contentDisplay]).catch(function(err) {
+          //console.log('Error typesetting math:', err);
+        //});
+      }
+
+      // Initial state setup
+      const isMacOS = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      markdownEditor.classList.remove('hidden');
+      contentDisplay.classList.add('hidden');
+      markdownEditor.focus();
+      // The document title is now handled by updateDocumentTitle()
+
+      function updateBanner() {
+        //const toggleKey = isMacOS ? 'Cmd+/' : 'Ctrl+/';
+        const toggleKey = 'Ctrl+M'
+        if (isEditing) {
+          modeBanner.textContent = `Mode: Editing (${toggleKey} to view)`;
+        } else {
+          modeBanner.textContent = `Mode: Viewing (${toggleKey} to edit)`;
+        }
+      }
+      updateBanner(); // Set initial banner text
+
+      function toggleView() {
+        if (isEditing) {
+          // Switch to rendered view
+          markdownEditor.classList.add('hidden');
+          contentDisplay.classList.remove('hidden');
+          renderMarkdown();
+          // Title already updated by input event or loadContent
+        } else {
+          // Switch to editing view
+          contentDisplay.classList.add('hidden');
+          markdownEditor.classList.remove('hidden');
+          markdownEditor.focus();
+          // Title already updated by input event or loadContent
+        }
+        isEditing = !isEditing;
+        updateBanner(); // Update banner after toggling
+      }
+
+      // Initial state: show editor
+      markdownEditor.classList.remove('hidden');
+      contentDisplay.classList.add('hidden');
+      markdownEditor.focus();
+      // Initial title is set by loadContent
+      updateDocumentTitle(); // Ensure title is set correctly on initial load/display
+
+
+      // Event listener for CTRL-M
+      document.addEventListener('keydown', function(event) {
+        const isMKey = event.key.toLowerCase() === 'm';
+        //const isCorrectModifier = isMacOS ? event.metaKey : event.ctrlKey;
+        const isCorrectModifier = event.ctrlKey;
+
+        if (isMKey && isCorrectModifier) {
+          event.preventDefault();
+          toggleView();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
