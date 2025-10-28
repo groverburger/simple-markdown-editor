@@ -456,9 +456,9 @@ $$
         const processedHtml = postProcessHeaders(rawHtml); // Apply the post-processing
         contentDisplay.innerHTML = processedHtml;
         // Render LaTeX with MathJax
-        //MathJax.typesetPromise([contentDisplay]).catch(function(err) {
-          //console.log('Error typesetting math:', err);
-        //});
+        MathJax.typesetPromise([contentDisplay]).catch(function(err) {
+          console.log('Error typesetting math:', err);
+        });
       }
 
       // Initial state setup
