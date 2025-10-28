@@ -283,60 +283,77 @@
       const modeBanner = document.getElementById('mode-banner')
 
       // Minimal Markdown example content
-      const initialMarkdown = `
-# Welcome to the Markdown Editor!
+      const initialMarkdown = `# Groverburger Simple Markdown Editor
+
+## Overview
+
+This is a lightweight, self-contained Markdown editor and viewer built as a single HTML file. It enables seamless toggling between raw editing and rendered preview modes, with automatic local storage for persistence, LaTeX math support via MathJax, and print-optimized styling for clean document output.
+
+Perfect for quick note-taking, documentation, or prototyping Markdown content offline without any setup.
 
 Press **Ctrl+M** to toggle between editing and viewing modes.
 
-## Headings
-### Subheading
-#### Another Level
+## Key Features
 
-## Text Formatting
-You can make text **bold**, *italic*, or even ***bold and italic***.
-Here's some \`inline code\`.
+- **Live Toggle**: Edit Markdown directly and preview HTML in real-time.
+- **Persistence**: Saves your work to browser localStorage automatically.
+- **Math Rendering**: Supports LaTeX equations for technical writing.
+- **Print-Ready**: Exports to printer-friendly pages with proper pagination.
+- **Single File**: No dependencies beyond CDN libraries—runs anywhere.
 
-## Lists
-### Unordered List:
-* Item one
-* Item two
-  * Nested item
-* Item three
+## Markdown Examples
 
-### Ordered List:
-1. First item
-2. Second item
-   1. Nested ordered item
-3. Third item
+### Headings
+# H1 Example
+## H2 Subheading
+### H3 Level
 
-## Links and Images
-Visit [Google](https://www.google.com).
+### Text Formatting
+Make text **bold**, *italic*, or ***bold italic***. Use \`inline code\` for snippets.
 
-Here's an image:
-![Alt text for image](https://groverburger.xyz/assets/favicon.png)
+### Lists
+#### Unordered
+- Item one
+- Item two
+  - Nested item
+- Item three
 
-## Code Blocks
-\`\`\`javascript
-function greet(name) {
-  console.log("Hello, " + name + "!");
+#### Ordered
+1. First step
+2. Second step
+   1. Nested substep
+3. Final step
+
+### Links and Images
+Check out [my website!](https://groverburger.xyz)
+Visit the [GitHub repo!](https://github.com/groverburger/simple-markdown-editor)
+
+Example image:  
+![Favicon](https://groverburger.xyz/assets/favicon.png)
+
+### Preformatted Blocks
+\`\`\`
+function helloWorld() {
+  console.log("Hello, Markdown!");
 }
-greet("World");
+helloWorld();
 \`\`\`
 
-## Blockquotes
-> This is a blockquote.
-> It can span multiple lines.
+### Blockquotes
+> This is a blockquote for quotes or notes.
+> It supports multiple lines seamlessly.
 
-## Tables
-| Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
-| Row 1 Col 1 | Row 1 Col 2 | Row 1 Col 3 |
-| Row 2 Col 1 | Row 2 Col 2 | Row 2 Col 3 |
+### Tables
+| Feature      | Description                  |
+|--------------|------------------------------|
+| Editing      | Real-time Markdown input     |
+| Preview      | HTML rendering with MathJax  |
+| Storage      | Local browser persistence    |
 
-## Math (via MathJax)
-Inline math: $\\alpha + \\beta = \\gamma$
+### Math (via MathJax)
+Inline: $\\alpha + \\beta = \\gamma$
 
-Display math:
+Display:  
 $$
 \\sum_{i=1}^n i = \\frac{n(n+1)}{2}
 $$
